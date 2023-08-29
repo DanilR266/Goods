@@ -22,7 +22,7 @@ class GoodsView: UIView {
     }()
     let searchTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите поисковый запрос"
+        textField.placeholder = "Введите название товара"
         textField.borderStyle = .roundedRect
         textField.isHidden = true
         textField.translatesAutoresizingMaskIntoConstraints = false

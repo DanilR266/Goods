@@ -31,8 +31,8 @@ class FavoritesController: UIViewController {
         }
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 10, left: 24, bottom: 10, right: 24)
-        layout.minimumInteritemSpacing = 19 // Минимальное расстояние между ячейками по горизонтали
-        layout.minimumLineSpacing = 25 // Минимальное расстояние между ячейками по вертикали
+        layout.minimumInteritemSpacing = 5
+        layout.minimumLineSpacing = 25
         layout.itemSize = CGSize(width: 158, height: 220)
                 
         collectionView = UICollectionView(frame: self.view.frame, collectionViewLayout: layout)
@@ -55,7 +55,11 @@ class FavoritesController: UIViewController {
     private func setUpUI() {
         view.addSubview(favoritesView)
         favoritesView.translatesAutoresizingMaskIntoConstraints = false
-        favoritesView.topAnchor.constraint(equalTo: view.topAnchor, constant: 110).isActive = true
+        if UIScreen.main.bounds.height < 730 {
+            favoritesView.topAnchor.constraint(equalTo: view.topAnchor, constant: 70).isActive = true
+        } else {
+            favoritesView.topAnchor.constraint(equalTo: view.topAnchor, constant: 110).isActive = true
+        }
         favoritesView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24).isActive = true
         favoritesView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24).isActive = true
         favoritesView.heightAnchor.constraint(equalToConstant: 35).isActive = true
@@ -70,7 +74,10 @@ class FavoritesController: UIViewController {
         navigationControllerReference?.popViewController(animated: true)
     }
     @objc private func deleteButtonTapped(_ sender: UIButton) {
-        UserDefaults.standard.set([], forKey: "ArrayLikeKey")
+        let empty: [Int] = []
+        DispatchQueue.main.async {
+            UserDefaults.standard.set(empty, forKey: "ArrayLikeKey")
+        }
         favorites = []
         collectionView?.reloadData()
     }

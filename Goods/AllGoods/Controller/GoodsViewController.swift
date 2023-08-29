@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Network
 
 class GoodsViewController: UIViewController, UITextFieldDelegate {
 
@@ -17,20 +18,37 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
     var request = Request()
     var goods: [Advertisement?] = []
     let imageCache = URLCache.shared
+    let monitor = NWPathMonitor()
+    let errorView = ErrorView()
+    let queue = DispatchQueue(label: "Monitor")
+    
     override func viewDidLoad() {
-        super.viewDidLoad()
-        request.request { [weak self] values in
-            DispatchQueue.main.async {
-                self!.goods = values
-                self!.filteredData = values
-                self?.collectionView?.reloadData()
+        monitor.start(queue: queue)
+        monitor.pathUpdateHandler = { path in
+            if path.status == .satisfied {
+                DispatchQueue.main.async {
+                    self.request.request { [weak self] values in
+                        DispatchQueue.main.async {
+                            self!.goods = values
+                            self!.filteredData = values
+                            self?.collectionView?.reloadData()
+                        }
+                    }
+                    self.setUpCollectionView()
+                    self.setUpUI()
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.setUpErrorView()
+                    self.collectionView?.removeFromSuperview()
+                }
             }
         }
-        view.backgroundColor = .background
+        super.viewDidLoad()
+        self.view.backgroundColor = .background
         goodsView.buttonSearch.addTarget(self, action: #selector(buttonSearchTapped(_:)), for: .touchUpInside)
         goodsView.heart.addTarget(self, action: #selector(buttonHeartTapped(_:)), for: .touchUpInside)
-        setUpCollectionView()
-        setUpUI()
+        errorView.title.addTarget(self, action: #selector(buttonError), for: .touchUpInside)
         goodsView.searchTextField.delegate = self
     }
     
@@ -38,6 +56,7 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         arrayLike = UserDefaults.standard.array(forKey: "ArrayLikeKey") as? [Int] ?? []
+        collectionView?.reloadData()
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -47,7 +66,11 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
     private func setUpUI() {
         view.addSubview(goodsView)
         goodsView.translatesAutoresizingMaskIntoConstraints = false
-        goodsView.topAnchor.constraint(equalTo: view.topAnchor, constant: 47).isActive = true
+        if UIScreen.main.bounds.height < 730 {
+            goodsView.topAnchor.constraint(equalTo: view.topAnchor, constant: 27).isActive = true
+        } else {
+            goodsView.topAnchor.constraint(equalTo: view.topAnchor, constant: 47).isActive = true
+        }
         goodsView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24).isActive = true
         goodsView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24).isActive = true
         goodsView.heightAnchor.constraint(equalToConstant: 55).isActive = true
@@ -61,21 +84,25 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
     private func setUpCollectionView() {
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 10, left: 24, bottom: 10, right: 24)
-        layout.minimumInteritemSpacing = 19 // Минимальное расстояние между ячейками по горизонтали
-        layout.minimumLineSpacing = 25 // Минимальное расстояние между ячейками по вертикали
+        layout.minimumInteritemSpacing = 5
+        layout.minimumLineSpacing = 25
         layout.itemSize = CGSize(width: 158, height: 220)
                 
         collectionView = UICollectionView(frame: self.view.frame, collectionViewLayout: layout)
         collectionView?.register(GoodCell.self, forCellWithReuseIdentifier: "GoodCell")
         collectionView?.backgroundColor = .background
-               
         collectionView?.dataSource = self
         collectionView?.delegate = self
-        
         collectionView?.isPrefetchingEnabled = false
-        
         view.addSubview(collectionView ?? UICollectionView())
-        
+    }
+    
+    private func setUpErrorView() {
+        view.addSubview(errorView)
+        errorView.translatesAutoresizingMaskIntoConstraints = false
+        errorView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        errorView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        errorView.heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
     }
     
     @objc func buttonHeartTapped(_ sender: UIButton) {
@@ -86,8 +113,11 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
         goodViewController.navigationControllerReference = navigationController
         navigationController?.pushViewController(goodViewController, animated: true)
     }
+    @objc func buttonError(_ sender: UIButton) {
+        self.viewDidLoad()
+    }
     @objc func buttonSearchTapped(_ sender: UIButton) {
-        goodsView.keyboardIsActive = !goodsView.keyboardIsActive
+        goodsView.keyboardIsActive.toggle()
         if !goodsView.keyboardIsActive {
             goodsView.title.isHidden = true
             goodsView.buttonSearch.setImage(UIImage(systemName: "x.circle"), for: .normal)
@@ -100,7 +130,7 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
             goodsView.searchTextField.isHidden = true
             goodsView.buttonSearch.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
             view.endEditing(true)
-            goods = filteredData
+//            goods = filteredData
             collectionView?.reloadData()
         }
     }
@@ -139,20 +169,19 @@ extension GoodsViewController: UICollectionViewDataSource, UICollectionViewDeleg
         cell.labelLocation.text = goods[indexPath.item]?.location
         cell.labelDate.text = goods[indexPath.item]?.createdDate
         cell.labelPrice.text = goods[indexPath.item]?.price
-        cell.heartButtonTapped = { [weak self] in
-            print("heart")
-            if !self!.arrayLike.contains(indexPath.item) {
-                self!.arrayLike.append(indexPath.item)
-                cell.heartCell.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-                cell.heartCell.tintColor = .heartColor
-                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
-            } else {
-                self!.arrayLike.removeAll { $0 == indexPath.item }
-                cell.heartCell.setImage(UIImage(systemName: "heart"), for: .normal)
-                cell.heartCell.tintColor = .heartCellColor
-                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
-            }
-        }
+//        cell.heartButtonTapped = { [weak self] in
+//            if !self!.arrayLike.contains(indexPath.item) {
+//                self!.arrayLike.append(indexPath.item)
+//                cell.heartCell.setImage(UIImage(systemName: "heart.fill"), for: .normal)
+//                cell.heartCell.tintColor = .heartColor
+//                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
+//            } else {
+//                self!.arrayLike.removeAll { $0 == indexPath.item }
+//                cell.heartCell.setImage(UIImage(systemName: "heart"), for: .normal)
+//                cell.heartCell.tintColor = .heartCellColor
+//                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
+//            }
+//        }
         if let imageUrl = URL(string: goods[indexPath.item]!.imageURL) {
             if let cachedResponse = imageCache.cachedResponse(for: URLRequest(url: imageUrl)) {
                 if let image = UIImage(data: cachedResponse.data) {

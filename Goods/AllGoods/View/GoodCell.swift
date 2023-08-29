@@ -15,6 +15,7 @@ class GoodCell: UICollectionViewCell {
     lazy var image: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
+        imageView.image = UIImage(named: "load")
         imageView.layer.cornerRadius = 10
         imageView.layer.masksToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -74,6 +75,7 @@ class GoodCell: UICollectionViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(heartButtonAction), for: .touchUpInside)
         button.tintColor = .heartCellColor
+        button.isEnabled = false
         return button
     }()
     lazy var heartInCell: UIButton = {
@@ -125,15 +127,15 @@ class GoodCell: UICollectionViewCell {
         labelLocation.leadingAnchor.constraint(equalTo: image.leadingAnchor).isActive = true
         labelLocation.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
-        heartSubView.widthAnchor.constraint(equalToConstant: 22).isActive = true
-        heartSubView.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        heartSubView.widthAnchor.constraint(equalToConstant: 26).isActive = true
+        heartSubView.heightAnchor.constraint(equalToConstant: 26).isActive = true
         heartSubView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -9).isActive = true
         heartSubView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -9).isActive = true
         heartSubView.addSubview(heartCell)
         heartCell.centerYAnchor.constraint(equalTo: heartSubView.centerYAnchor).isActive = true
         heartCell.centerXAnchor.constraint(equalTo: heartSubView.centerXAnchor).isActive = true
-        heartCell.widthAnchor.constraint(equalToConstant: 22).isActive = true
-        heartCell.heightAnchor.constraint(equalToConstant: 22).isActive = true
+//        heartCell.widthAnchor.constraint(equalToConstant: 22).isActive = true
+//        heartCell.heightAnchor.constraint(equalToConstant: 22).isActive = true
     }
     
     override init(frame: CGRect) {
