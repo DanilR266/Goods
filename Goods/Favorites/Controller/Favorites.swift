@@ -25,7 +25,6 @@ class FavoritesController: UIViewController {
             DispatchQueue.main.async {
                 self!.favorites = values
                 self!.collectionView?.reloadData()
-                print(values.count)
             }
         }
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()

@@ -77,7 +77,6 @@ class GoodController: UIViewController {
     
     @objc private func likeButtonTapped() {
         arrayLike.append(Int(id!)!-1)
-        print(arrayLike)
         animateViewCopy()
         DispatchQueue.main.async {
             UserDefaults.standard.set(self.arrayLike, forKey: "ArrayLikeKey")
