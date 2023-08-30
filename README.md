@@ -33,5 +33,9 @@
 - Верстка кодом
 - MVC
 
+# Установка 
+- Склонировать репозиторий: https://github.com/DanilR266/Goods.git
+- Открыть Goods.xcodeproj
+
 
 
