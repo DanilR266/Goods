@@ -6,49 +6,35 @@
 //
 
 import UIKit
-import Network
 
 class GoodsViewController: UIViewController, UITextFieldDelegate {
 
-    var arrayLike: Array<Int> = UserDefaults.standard.array(forKey: "ArrayLikeKey") as? [Int] ?? []
     var filteredData: [Advertisement?] = []
-    var searchTimer: Timer?
-    var goodsView = GoodsView()
-    var collectionView: UICollectionView?
     var request = Request()
     var goods: [Advertisement?] = []
+    var goodsView = GoodsView()
+    var arrayLike: Array<Int> = UserDefaults.standard.array(forKey: "ArrayLikeKey") as? [Int] ?? []
+    var searchTimer: Timer?
+    var collectionView: UICollectionView?
     let imageCache = URLCache.shared
-    let monitor = NWPathMonitor()
-    let errorView = ErrorView()
-    let queue = DispatchQueue(label: "Monitor")
     
     override func viewDidLoad() {
-        monitor.start(queue: queue)
-        monitor.pathUpdateHandler = { path in
-            if path.status == .satisfied {
-                DispatchQueue.main.async {
-                    self.request.request { [weak self] values in
-                        DispatchQueue.main.async {
-                            self!.goods = values
-                            self!.filteredData = values
-                            self?.collectionView?.reloadData()
-                        }
-                    }
-                    self.setUpCollectionView()
-                    self.setUpUI()
-                }
-            } else {
-                DispatchQueue.main.async {
-                    self.setUpErrorView()
-                    self.collectionView?.removeFromSuperview()
+        super.viewDidLoad()
+        self.request.request { [weak self] values in
+            DispatchQueue.main.async {
+                self!.goods = values
+                if values.isEmpty {
+                    self!.showAlert(message: "Ошибка получения данных")
+                } else {
+                    self!.filteredData = values
+                    self?.collectionView?.reloadData()
                 }
             }
         }
-        super.viewDidLoad()
-        self.view.backgroundColor = .background
-        goodsView.buttonSearch.addTarget(self, action: #selector(buttonSearchTapped(_:)), for: .touchUpInside)
-        goodsView.heart.addTarget(self, action: #selector(buttonHeartTapped(_:)), for: .touchUpInside)
-        errorView.title.addTarget(self, action: #selector(buttonError), for: .touchUpInside)
+        setUpCollectionView()
+        setUpUI()
+        view.backgroundColor = .background
+        buttonsTarget()
         goodsView.searchTextField.delegate = self
     }
     
@@ -97,12 +83,15 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
         view.addSubview(collectionView ?? UICollectionView())
     }
     
-    private func setUpErrorView() {
-        view.addSubview(errorView)
-        errorView.translatesAutoresizingMaskIntoConstraints = false
-        errorView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        errorView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        errorView.heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
+    private func showAlert(message: String) {
+        let alertController = UIAlertController(
+            title: "Ошибка",
+            message: message,
+            preferredStyle: .alert
+        )
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        self.present(alertController, animated: true, completion: nil)
     }
     
     @objc func buttonHeartTapped(_ sender: UIButton) {
@@ -135,6 +124,11 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
+    private func buttonsTarget() {
+        goodsView.buttonSearch.addTarget(self, action: #selector(buttonSearchTapped(_:)), for: .touchUpInside)
+        goodsView.heart.addTarget(self, action: #selector(buttonHeartTapped(_:)), for: .touchUpInside)
+    }
+    
     func updateCollectionView(with searchText: String) {
         goods = filteredData.filter { $0!.title.lowercased().contains(searchText.lowercased()) }
         if searchText == "" { goods = filteredData }
@@ -150,6 +144,7 @@ class GoodsViewController: UIViewController, UITextFieldDelegate {
     }
 
 }
+
 
 extension GoodsViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -169,19 +164,6 @@ extension GoodsViewController: UICollectionViewDataSource, UICollectionViewDeleg
         cell.labelLocation.text = goods[indexPath.item]?.location
         cell.labelDate.text = goods[indexPath.item]?.createdDate
         cell.labelPrice.text = goods[indexPath.item]?.price
-//        cell.heartButtonTapped = { [weak self] in
-//            if !self!.arrayLike.contains(indexPath.item) {
-//                self!.arrayLike.append(indexPath.item)
-//                cell.heartCell.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-//                cell.heartCell.tintColor = .heartColor
-//                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
-//            } else {
-//                self!.arrayLike.removeAll { $0 == indexPath.item }
-//                cell.heartCell.setImage(UIImage(systemName: "heart"), for: .normal)
-//                cell.heartCell.tintColor = .heartCellColor
-//                UserDefaults.standard.set(self!.arrayLike, forKey: "ArrayLikeKey")
-//            }
-//        }
         if let imageUrl = URL(string: goods[indexPath.item]!.imageURL) {
             if let cachedResponse = imageCache.cachedResponse(for: URLRequest(url: imageUrl)) {
                 if let image = UIImage(data: cachedResponse.data) {
@@ -209,6 +191,3 @@ extension GoodsViewController: UICollectionViewDataSource, UICollectionViewDeleg
         navigationController?.pushViewController(goodViewController, animated: true)
     }
 }
-
-
-

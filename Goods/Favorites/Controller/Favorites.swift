@@ -8,16 +8,15 @@
 import Foundation
 import UIKit
 
-
 class FavoritesController: UIViewController {
     
+    var favorites: [Advertisement?] = []
+    var request = RequestFavorites()
+    var favoritesView = FavoritesView()
     let imageCache = URLCache.shared
     var favoritesId: [Int] = []
-    var favorites: [Advertisement?] = []
     var collectionView: UICollectionView?
-    var request = RequestFavorites()
     var navigationControllerReference: UINavigationController?
-    var favoritesView = FavoritesView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,10 +45,9 @@ class FavoritesController: UIViewController {
         
         view.addSubview(collectionView ?? UICollectionView())
         setUpUI()
-        favoritesView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         let customBackButton = UIBarButtonItem(customView: favoritesView.backButton)
         navigationItem.leftBarButtonItem = customBackButton
-        favoritesView.delete.addTarget(self, action: #selector(deleteButtonTapped(_:)), for: .touchUpInside)
+        buttonsTarget()
     }
     
     private func setUpUI() {
@@ -82,7 +80,13 @@ class FavoritesController: UIViewController {
         collectionView?.reloadData()
     }
     
+    private func buttonsTarget() {
+        favoritesView.backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+        favoritesView.delete.addTarget(self, action: #selector(deleteButtonTapped(_:)), for: .touchUpInside)
+    }
+    
 }
+
 
 extension FavoritesController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {

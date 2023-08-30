@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 
-
 class GoodView: UIView {
     
     lazy var backButton: UIButton = {
@@ -90,23 +89,25 @@ class GoodView: UIView {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    lazy var phone: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .textColor
-        label.text = "Загрузка..."
-        label.textAlignment = .left
-        label.numberOfLines = 1
+    lazy var phone: UIButton = {
+        let label = UIButton()
+        label.setTitle("Загрузка...", for: .normal)
+        label.setTitleColor(UIColor.textColor, for: .normal)
+        label.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        label.titleLabel?.textAlignment = .left
+        label.titleLabel?.numberOfLines = 1
+        label.isEnabled = false
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    lazy var email: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .textColor
-        label.text = "Загрузка..."
-        label.textAlignment = .left
-        label.numberOfLines = 1
+    lazy var email: UIButton = {
+        let label = UIButton()
+        label.setTitle("Загрузка...", for: .normal)
+        label.setTitleColor(UIColor.textColor, for: .normal)
+        label.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        label.titleLabel?.textAlignment = .left
+        label.titleLabel?.numberOfLines = 1
+        label.isEnabled = false
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -116,6 +117,18 @@ class GoodView: UIView {
         label.textColor = .subTextColor
         label.textAlignment = .left
         label.numberOfLines = 1
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    lazy var copyView: UILabel = {
+        let label = UILabel()
+        label.text = "Добавлено в избранное"
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .textColor
+        label.textAlignment = .center
+        label.backgroundColor = .cellLikeColor
+        label.alpha = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -186,10 +199,15 @@ class GoodView: UIView {
         addSubview(labelDescription)
         addSubview(rectangleView)
         addSubview(date)
+        addSubview(copyView)
         image.topAnchor.constraint(equalTo: topAnchor, constant: 30).isActive = true
         image.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24).isActive = true
         image.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
         image.heightAnchor.constraint(equalToConstant: 295).isActive = true
+        copyView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        copyView.trailingAnchor.constraint(equalTo: image.trailingAnchor, constant: -20).isActive = true
+        copyView.leadingAnchor.constraint(equalTo: image.leadingAnchor, constant: 20).isActive = true
+        copyView.topAnchor.constraint(equalTo: image.topAnchor, constant: 10).isActive = true
         like.trailingAnchor.constraint(equalTo: image.trailingAnchor, constant: -5).isActive = true
         like.bottomAnchor.constraint(equalTo: image.bottomAnchor, constant: -5).isActive = true
         like.widthAnchor.constraint(equalToConstant: 153).isActive = true
